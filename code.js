@@ -1,6 +1,10 @@
 var userName = 'qip';
 
 function main(){
+  if(isHoliday()){
+    return;
+  }
+
   var stockItem = getRandomQiitaItemInStock();
   if(stockItem){
     postToSlack(stockItem);
@@ -101,4 +105,24 @@ function postToSlack(message){
   };
 
   UrlFetchApp.fetch(url, options);
+}
+
+function isHoliday(){
+  var today = new Date();
+
+  //土日か判定
+  var weekInt = today.getDay();
+  if(weekInt <= 0 || 6 <= weekInt){
+    return true;
+  }
+
+  //祝日か判定
+  var calendarId = "ja.japanese#holiday@group.v.calendar.google.com";
+  var calendar = CalendarApp.getCalendarById(calendarId);
+  var todayEvents = calendar.getEventsForDay(today);
+  if(todayEvents.length > 0){
+    return true;
+  }
+
+  return false;
 }
