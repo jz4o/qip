@@ -16,6 +16,23 @@ function main(){
   }
 }
 
+function doPost(e){
+  var accessToken  = PropertiesService.getScriptProperties().getProperty('SLACK_OUTGOIN_TOKEN');
+  //Slack以外からのリクエストははじく
+  if(e['parameter']['token'] != accessToken){
+    return;
+  }
+
+  var requestText = e['parameter']['text'];
+  var regexped = /\<([^\>]+)/.exec(requestText);
+  if(regexped == null){
+    return;
+  }
+  var qiitaUrl = regexped[1];
+
+  addQiitaItemToStock(qiitaUrl);
+}
+
 function getRandomQiitaItemInTag(){
   var response = UrlFetchApp.fetch('https://qiita.com/api/v2/users/' + userName + '/following_tags');
   var tags = JSON.parse(response.getContentText());
