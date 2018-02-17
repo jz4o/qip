@@ -1,5 +1,31 @@
 var userName = 'qip';
 
+function getRandomQiitaItemInTag(){
+  var response = UrlFetchApp.fetch('https://qiita.com/api/v2/users/' + userName + '/following_tags');
+  var tags = JSON.parse(response.getContentText());
+  if(tags.length <= 0){
+    return;
+  }
+
+  var randomTag = tags[Math.floor(Math.random() * tags.length)];
+
+  response = UrlFetchApp.fetch('https://qiita.com/api/v2/tags/' + randomTag['id'] + '/items');
+  var items = JSON.parse(response.getContentText());
+  if(items.length <= 0){
+    return;
+  }
+
+  var isPopularItem = function(item, index, array){ return item['likes_count'] >= 10;};
+  items = items.filter(isPopularItem);
+  if(items.length <= 0){
+    return;
+  }
+
+  var randomItem = items[Math.floor(Math.random() * items.length)];  
+
+  return randomItem['url'];
+}
+
 function getRandomQiitaItemInStock() {
   var response = UrlFetchApp.fetch('https://qiita.com/api/v2/users/' + userName + '/stocks');
   var items = JSON.parse(response.getContentText());
