@@ -1,5 +1,17 @@
 var userName = 'qip';
 
+function main(){
+  var stockItem = getRandomQiitaItemInStock();
+  if(stockItem){
+    postToSlack(stockItem);
+  }
+
+  var tagItem = getRandomQiitaItemInTag();
+  if(tagItem){
+    postToSlack(tagItem);
+  }
+}
+
 function getRandomQiitaItemInTag(){
   var response = UrlFetchApp.fetch('https://qiita.com/api/v2/users/' + userName + '/following_tags');
   var tags = JSON.parse(response.getContentText());
