@@ -13,6 +13,23 @@ function getRandomQiitaItemInStock() {
   return randomItem['url'];
 }
 
+function isStocked(itemId){
+  var url = 'https://qiita.com/api/v2/items/' + itemId + '/stock';
+
+  var accessToken = PropertiesService.getScriptProperties().getProperty('QIITA_API_ACCESS_TOKEN');
+  var options = {
+    'method' : 'get',
+    'headers': {'Authorization': 'Bearer ' + accessToken}
+  };
+
+  try{
+    UrlFetchApp.fetch(url, options);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
 function addQiitaItemToStock(itemUrl){
   var regexped = /https:\/\/qiita.com\/.+\/([^#?]*)/.exec(itemUrl);
   if(regexped == null){
@@ -21,6 +38,10 @@ function addQiitaItemToStock(itemUrl){
   }
 
   var itemId = regexped[1];
+
+  if(isStocked(itemId)){
+    return;
+  }
 
   var url = 'https://qiita.com/api/v2/items/' + itemId + '/stock';
 
