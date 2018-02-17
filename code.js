@@ -13,6 +13,26 @@ function getRandomQiitaItemInStock() {
   return randomItem['url'];
 }
 
+function addQiitaItemToStock(itemUrl){
+  var regexped = /https:\/\/qiita.com\/.+\/([^#?]*)/.exec(itemUrl);
+  if(regexped == null){
+    Logger.log('itemUrl is wrong: ' + itemUrl);
+    return;
+  }
+
+  var itemId = regexped[1];
+
+  var url = 'https://qiita.com/api/v2/items/' + itemId + '/stock';
+
+  var accessToken = PropertiesService.getScriptProperties().getProperty('QIITA_API_ACCESS_TOKEN');
+  var options = {
+    'method' : 'put',
+    'headers': {'Authorization': 'Bearer ' + accessToken}
+  };
+
+  UrlFetchApp.fetch(url, options);
+}
+
 function postToSlack(message){
   var url = PropertiesService.getScriptProperties().getProperty('SLACK_INCOMING_URL');
   var options = {
