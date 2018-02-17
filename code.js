@@ -12,3 +12,14 @@ function getRandomQiitaItemInStock() {
   
   return randomItem['url'];
 }
+
+function postToSlack(message){
+  var url = PropertiesService.getScriptProperties().getProperty('SLACK_INCOMING_URL');
+  var options = {
+    'method'     : 'post',
+    'contentType': 'application/json',
+    'payload'    : JSON.stringify({'text':message, 'unfurl_links': true})
+  };
+
+  UrlFetchApp.fetch(url, options);
+}
