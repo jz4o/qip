@@ -1,4 +1,16 @@
-var userName = 'qip';
+var scriptProperties = PropertiesService.getScriptProperties();
+
+var qiita = {
+  'apiUrl'        : 'https://qiita.com/api/v2',
+  'apiToken'      : scriptProperties.getProperty('QIITA_API_ACCESS_TOKEN'),
+  'userId'        : scriptProperties.getProperty('QIITA_USER_ID'),
+  'popularBorder' : 10
+};
+
+var slack = {
+  'outgoingToken' : scriptProperties.getProperty('SLACK_OUTGOING_TOKEN'),
+  'incomingUrl'   : scriptProperties.getProperty('SLACK_INCOMING_URL')
+}
 
 function main(){
   if(isHoliday()){
@@ -17,9 +29,8 @@ function main(){
 }
 
 function doPost(e){
-  var accessToken  = PropertiesService.getScriptProperties().getProperty('SLACK_OUTGOIN_TOKEN');
   //Slack以外からのリクエストははじく
-  if(e['parameter']['token'] != accessToken){
+  if(e['parameter']['token'] != slack['outgoingToken']){
     return;
   }
 
@@ -44,7 +55,7 @@ function getQiitaItemId(url){
 }
 
 function getRandomQiitaItemInTag(){
-  var tags = execQiitaApiForGet('users', userName, 'following_tags');
+  var tags = execQiitaApiForGet('users', qiita['userId'], 'following_tags');
   var randomTag = getRandomElement(tags);
   if(randomTag == null){
     return;
@@ -55,7 +66,9 @@ function getRandomQiitaItemInTag(){
     return;
   }
 
-  var isPopularItem = function(item, index, array){ return item['likes_count'] >= 10;};
+  var isPopularItem = function(item, index, array){
+    return item['likes_count'] >= qiita['popularBorder'];
+  };
   items = items.filter(isPopularItem);
   var randomItem = getRandomElement(items);
 
@@ -63,7 +76,7 @@ function getRandomQiitaItemInTag(){
 }
 
 function getRandomQiitaItemInStock() {
-  var items = execQiitaApiForGet('users', userName, 'stocks');
+  var items = execQiitaApiForGet('users', qiita['userId'], 'stocks');
   var randomItem = getRandomElement(items);
   
   return randomItem && randomItem['url'];
@@ -94,19 +107,18 @@ function addQiitaItemToLike(itemId){
 }
 
 function execQiitaApiForGet(targetGroup, targetId, targetType){
-  var urlElements = ['https://qiita.com/api/v2', targetGroup, targetId, targetType]
+  var urlElements = [qiita['apiUrl'], targetGroup, targetId, targetType]
   var response = UrlFetchApp.fetch(urlElements.join('/'));
   return JSON.parse(response.getContentText());
 }
 
 function execQiitaApiForCheck(targetGroup, targetId, targetType){
-  var urlElements = ['https://qiita.com/api/v2', targetGroup, targetId, targetType];
+  var urlElements = [qiita['apiUrl'], targetGroup, targetId, targetType];
   var url = urlElements.join('/');
 
-  var accessToken = PropertiesService.getScriptProperties().getProperty('QIITA_API_ACCESS_TOKEN');
   var options = {
     'method' : 'get',
-    'headers': {'Authorization': 'Bearer ' + accessToken}
+    'headers': {'Authorization': 'Bearer ' + qiita['apiToken']}
   };
 
   try{
@@ -118,27 +130,25 @@ function execQiitaApiForCheck(targetGroup, targetId, targetType){
 }
 
 function execQiitaApiForPut(targetGroup, targetId, targetType){
-  var urlElements = ['https://qiita.com/api/v2', targetGroup, targetId, targetType];
+  var urlElements = [qiita['apiUrl'], targetGroup, targetId, targetType];
   var url = urlElements.join('/');
 
-  var accessToken = PropertiesService.getScriptProperties().getProperty('QIITA_API_ACCESS_TOKEN');
   var options = {
     'method' : 'put',
-    'headers': {'Authorization': 'Bearer ' + accessToken}
+    'headers': {'Authorization': 'Bearer ' + qiita['apiToken']}
   };
 
   UrlFetchApp.fetch(url, options);
 }
 
 function postToSlack(message){
-  var url = PropertiesService.getScriptProperties().getProperty('SLACK_INCOMING_URL');
   var options = {
     'method'     : 'post',
     'contentType': 'application/json',
     'payload'    : JSON.stringify({'text':message, 'unfurl_links': true})
   };
 
-  UrlFetchApp.fetch(url, options);
+  UrlFetchApp.fetch(slack['incomingUrl'], options);
 }
 
 function isHoliday(){
