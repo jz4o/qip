@@ -70,20 +70,7 @@ function getRandomQiitaItemInStock() {
 }
 
 function isStocked(itemId){
-  var url = 'https://qiita.com/api/v2/items/' + itemId + '/stock';
-
-  var accessToken = PropertiesService.getScriptProperties().getProperty('QIITA_API_ACCESS_TOKEN');
-  var options = {
-    'method' : 'get',
-    'headers': {'Authorization': 'Bearer ' + accessToken}
-  };
-
-  try{
-    UrlFetchApp.fetch(url, options);
-    return true;
-  }catch(e){
-    return false;
-  }
+  return execQiitaApiForCheck('items', itemId, 'stock');
 }
 
 function addQiitaItemToStock(itemId){
@@ -103,20 +90,7 @@ function addQiitaItemToStock(itemId){
 }
 
 function isLiked(itemId){
-  var url = 'https://qiita.com/api/v2/items/' + itemId + '/like';
-
-  var accessToken = PropertiesService.getScriptProperties().getProperty('QIITA_API_ACCESS_TOKEN');
-  var options = {
-    'method' : 'get',
-    'headers': {'Authorization': 'Bearer ' + accessToken}
-  };
-
-  try{
-    UrlFetchApp.fetch(url, options);
-    return true;
-  }catch(e){
-    return false;
-  }
+  return execQiitaApiForCheck('items', itemId, 'like');
 }
 
 function addQiitaItemToLike(itemId){
@@ -139,6 +113,24 @@ function execQiitaApiForGet(targetGroup, targetId, targetType){
   var urlElements = ['https://qiita.com/api/v2', targetGroup, targetId, targetType]
   var response = UrlFetchApp.fetch(urlElements.join('/'));
   return JSON.parse(response.getContentText());
+}
+
+function execQiitaApiForCheck(targetGroup, targetId, targetType){
+  var urlElements = ['https://qiita.com/api/v2', targetGroup, targetId, targetType];
+  var url = urlElements.join('/');
+
+  var accessToken = PropertiesService.getScriptProperties().getProperty('QIITA_API_ACCESS_TOKEN');
+  var options = {
+    'method' : 'get',
+    'headers': {'Authorization': 'Bearer ' + accessToken}
+  };
+
+  try{
+    UrlFetchApp.fetch(url, options);
+    return true;
+  }catch(e){
+    return false;
+  }
 }
 
 function postToSlack(message){
