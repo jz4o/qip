@@ -31,6 +31,7 @@ function doPost(e){
   var qiitaUrl = regexped[1];
 
   addQiitaItemToStock(qiitaUrl);
+  addQiitaItemToLike(qiitaUrl);
 }
 
 function getRandomQiitaItemInTag(){
@@ -103,6 +104,47 @@ function addQiitaItemToStock(itemUrl){
   }
 
   var url = 'https://qiita.com/api/v2/items/' + itemId + '/stock';
+
+  var accessToken = PropertiesService.getScriptProperties().getProperty('QIITA_API_ACCESS_TOKEN');
+  var options = {
+    'method' : 'put',
+    'headers': {'Authorization': 'Bearer ' + accessToken}
+  };
+
+  UrlFetchApp.fetch(url, options);
+}
+
+function isLiked(itemId){
+  var url = 'https://qiita.com/api/v2/items/' + itemId + '/like';
+
+  var accessToken = PropertiesService.getScriptProperties().getProperty('QIITA_API_ACCESS_TOKEN');
+  var options = {
+    'method' : 'get',
+    'headers': {'Authorization': 'Bearer ' + accessToken}
+  };
+
+  try{
+    UrlFetchApp.fetch(url, options);
+    return true;
+  }catch(e){
+    return false;
+  }
+}
+
+function addQiitaItemToLike(itemUrl){
+  var regexped = /https:\/\/qiita.com\/.+\/([^#?]*)/.exec(itemUrl);
+  if(regexped == null){
+    Logger.log('itemUrl is wrong: ' + itemUrl);
+    return;
+  }
+
+  var itemId = regexped[1];
+
+  if(isLiked(itemId)){
+    return;
+  }
+
+  var url = 'https://qiita.com/api/v2/items/' + itemId + '/like';
 
   var accessToken = PropertiesService.getScriptProperties().getProperty('QIITA_API_ACCESS_TOKEN');
   var options = {
