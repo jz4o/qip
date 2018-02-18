@@ -44,15 +44,13 @@ function getQiitaItemId(url){
 }
 
 function getRandomQiitaItemInTag(){
-  var response = UrlFetchApp.fetch('https://qiita.com/api/v2/users/' + userName + '/following_tags');
-  var tags = JSON.parse(response.getContentText());
+  var tags = execQiitaApiForGet('users', userName, 'following_tags');
   var randomTag = getRandomElement(tags);
   if(randomTag == null){
     return;
   }
 
-  response = UrlFetchApp.fetch('https://qiita.com/api/v2/tags/' + randomTag['id'] + '/items');
-  var items = JSON.parse(response.getContentText());
+  var items = execQiitaApiForGet('tags', randomTag['id'], 'items');
   if(items.length <= 0){
     return;
   }
@@ -65,8 +63,7 @@ function getRandomQiitaItemInTag(){
 }
 
 function getRandomQiitaItemInStock() {
-  var response = UrlFetchApp.fetch('https://qiita.com/api/v2/users/' + userName + '/stocks');
-  var items = JSON.parse(response.getContentText());
+  var items = execQiitaApiForGet('users', userName, 'stocks');
   var randomItem = getRandomElement(items);
   
   return randomItem && randomItem['url'];
@@ -136,6 +133,12 @@ function addQiitaItemToLike(itemId){
   };
 
   UrlFetchApp.fetch(url, options);
+}
+
+function execQiitaApiForGet(targetGroup, targetId, targetType){
+  var urlElements = ['https://qiita.com/api/v2', targetGroup, targetId, targetType]
+  var response = UrlFetchApp.fetch(urlElements.join('/'));
+  return JSON.parse(response.getContentText());
 }
 
 function postToSlack(message){
