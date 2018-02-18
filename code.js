@@ -29,9 +29,18 @@ function doPost(e){
     return;
   }
   var qiitaUrl = regexped[1];
+  var qiitaItemId = getQiitaItemId(qiitaUrl);
+  if(qiitaItemId == null){
+    return;
+  }
 
-  addQiitaItemToStock(qiitaUrl);
-  addQiitaItemToLike(qiitaUrl);
+  addQiitaItemToStock(qiitaItemId);
+  addQiitaItemToLike(qiitaItemId);
+}
+
+function getQiitaItemId(url){
+  var regexped = /https:\/\/qiita.com\/.+\/([^#?]*)/.exec(url);
+  return regexped && regexped[1];
 }
 
 function getRandomQiitaItemInTag(){
@@ -80,15 +89,7 @@ function isStocked(itemId){
   }
 }
 
-function addQiitaItemToStock(itemUrl){
-  var regexped = /https:\/\/qiita.com\/.+\/([^#?]*)/.exec(itemUrl);
-  if(regexped == null){
-    Logger.log('itemUrl is wrong: ' + itemUrl);
-    return;
-  }
-
-  var itemId = regexped[1];
-
+function addQiitaItemToStock(itemId){
   if(isStocked(itemId)){
     return;
   }
@@ -121,15 +122,7 @@ function isLiked(itemId){
   }
 }
 
-function addQiitaItemToLike(itemUrl){
-  var regexped = /https:\/\/qiita.com\/.+\/([^#?]*)/.exec(itemUrl);
-  if(regexped == null){
-    Logger.log('itemUrl is wrong: ' + itemUrl);
-    return;
-  }
-
-  var itemId = regexped[1];
-
+function addQiitaItemToLike(itemId){
   if(isLiked(itemId)){
     return;
   }
