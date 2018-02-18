@@ -37,11 +37,10 @@ function doPost(e){
 function getRandomQiitaItemInTag(){
   var response = UrlFetchApp.fetch('https://qiita.com/api/v2/users/' + userName + '/following_tags');
   var tags = JSON.parse(response.getContentText());
-  if(tags.length <= 0){
+  var randomTag = getRandomElement(tags);
+  if(randomTag == null){
     return;
   }
-
-  var randomTag = tags[Math.floor(Math.random() * tags.length)];
 
   response = UrlFetchApp.fetch('https://qiita.com/api/v2/tags/' + randomTag['id'] + '/items');
   var items = JSON.parse(response.getContentText());
@@ -51,26 +50,17 @@ function getRandomQiitaItemInTag(){
 
   var isPopularItem = function(item, index, array){ return item['likes_count'] >= 10;};
   items = items.filter(isPopularItem);
-  if(items.length <= 0){
-    return;
-  }
+  var randomItem = getRandomElement(items);
 
-  var randomItem = items[Math.floor(Math.random() * items.length)];  
-
-  return randomItem['url'];
+  return randomItem && randomItem['url'];
 }
 
 function getRandomQiitaItemInStock() {
   var response = UrlFetchApp.fetch('https://qiita.com/api/v2/users/' + userName + '/stocks');
   var items = JSON.parse(response.getContentText());
+  var randomItem = getRandomElement(items);
   
-  if(items.length <= 0){
-    return null;
-  }
-  
-  var randomItem = items[Math.floor(Math.random() * items.length)];  
-  
-  return randomItem['url'];
+  return randomItem && randomItem['url'];
 }
 
 function isStocked(itemId){
@@ -184,4 +174,12 @@ function isHoliday(){
   }
 
   return false;
+}
+
+function getRandomElement(array){
+  if(array.length <= 0){
+    return;
+  }
+
+  return array[Math.floor(Math.random() * array.length)];
 }
