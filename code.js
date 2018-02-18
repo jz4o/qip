@@ -10,7 +10,7 @@ var qiita = {
 var slack = {
   'outgoingToken' : scriptProperties.getProperty('SLACK_OUTGOING_TOKEN'),
   'incomingUrl'   : scriptProperties.getProperty('SLACK_INCOMING_URL')
-}
+};
 
 function main(){
   if(isHoliday()){
@@ -107,14 +107,13 @@ function addQiitaItemToLike(itemId){
 }
 
 function execQiitaApiForGet(targetGroup, targetId, targetType){
-  var urlElements = [qiita['apiUrl'], targetGroup, targetId, targetType]
-  var response = UrlFetchApp.fetch(urlElements.join('/'));
+  var url = [qiita['apiUrl'], targetGroup, targetId, targetType].join('/');
+  var response = UrlFetchApp.fetch(url);
   return JSON.parse(response.getContentText());
 }
 
 function execQiitaApiForCheck(targetGroup, targetId, targetType){
-  var urlElements = [qiita['apiUrl'], targetGroup, targetId, targetType];
-  var url = urlElements.join('/');
+  var url = [qiita['apiUrl'], targetGroup, targetId, targetType].join('/');
 
   var options = {
     'method' : 'get',
@@ -130,8 +129,7 @@ function execQiitaApiForCheck(targetGroup, targetId, targetType){
 }
 
 function execQiitaApiForPut(targetGroup, targetId, targetType){
-  var urlElements = [qiita['apiUrl'], targetGroup, targetId, targetType];
-  var url = urlElements.join('/');
+  var url = [qiita['apiUrl'], targetGroup, targetId, targetType].join('/');
 
   var options = {
     'method' : 'put',
