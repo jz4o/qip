@@ -61,14 +61,19 @@ function doPost(e){
     return;
   }
   var qiitaUrl = regexped[1];
-  var qiitaItemId = getQiitaItemId(qiitaUrl);
-  if(qiitaItemId == null){
-    return;
+
+  // Qiita記事URLがポストされた場合
+  if(qiitaItemId = getQiitaItemId(qiitaUrl)){
+    // ストック及びいいねの登録
+    addQiitaItemToStock(qiitaItemId);
+    addQiitaItemToLike(qiitaItemId);
   }
 
-  // ストック及びいいねの登録
-  addQiitaItemToStock(qiitaItemId);
-  addQiitaItemToLike(qiitaItemId);
+  // QiitaタグURLがポストされた場合
+  if(qiitaTagId = getQiitaTagId(qiitaUrl)) {
+    // フォロー登録
+    addQiitaTagToFollow(qiitaTagId);
+  }
 }
 
 /**
@@ -80,7 +85,20 @@ function doPost(e){
  * @return string / null Qiita記事ID
  */
 function getQiitaItemId(url){
-  var regexped = /https:\/\/qiita.com\/.+\/([^#?]*)/.exec(url);
+  var regexped = /https:\/\/qiita.com\/.+\/items\/([^#?]*)/.exec(url);
+  return regexped && regexped[1];
+}
+
+/**
+ * QiitaのURLからタグのIDを取得し、返します.
+ * ※取得に失敗した場合はNullを返します
+ *
+ * @param string url QiitaタグURL
+ *
+ * @return string / null QiitaタグID
+ */
+function getQiitaTagId(url) {
+  var regexped = /https:\/\/qiita.com\/tags\/(.*)/.exec(url);
   return regexped && regexped[1];
 }
 
@@ -128,7 +146,7 @@ function getRandomQiitaItemInStock() {
   // ストックした記事からランダムに1件取得
   var items = execQiitaApiForGet('users', qiita['userId'], 'stocks');
   var randomItem = getRandomElement(items);
-  
+
   //　該当の記事URLを返す
   return randomItem && randomItem['url'];
 }
@@ -183,6 +201,31 @@ function addQiitaItemToLike(itemId){
 
   // いいね登録
   execQiitaApiForPut('items', itemId, 'like');
+}
+
+/**
+ * 該当のQiitaタグをフォロー済みか確認し、結果を返します.
+ *
+ * @param string tagId タグID
+ *
+ * @return boolean フォロー済みの場合 `true`
+ */
+function isFollowed(tagId) {
+  return execQiitaApiForCheck('tags', tagId, 'following');
+}
+
+/**
+ * 該当のQiitaタグをフォローします.
+ *
+ * @param string tagId タグID
+ */
+function addQiitaTagToFollow(tagId){
+  if(isFollowed(tagId)){
+    return;
+  }
+
+  // フォロー
+  execQiitaApiForPut('tags', tagId, 'following');
 }
 
 /**
