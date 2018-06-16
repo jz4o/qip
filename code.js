@@ -3,10 +3,12 @@ var scriptProperties = PropertiesService.getScriptProperties();
 
 // Qiita関連の各種設定値
 var qiita = {
-  'apiUrl'        : 'https://qiita.com/api/v2',
-  'apiToken'      : scriptProperties.getProperty('QIITA_API_ACCESS_TOKEN'),
-  'userId'        : scriptProperties.getProperty('QIITA_USER_ID'),
-  'popularBorder' : 10
+  'apiUrl'            : 'https://qiita.com/api/v2',
+  'apiToken'          : scriptProperties.getProperty('QIITA_API_ACCESS_TOKEN'),
+  'apiRequestPerPage' : 100,
+  'apiRequestMaxPage' : 100,
+  'userId'            : scriptProperties.getProperty('QIITA_USER_ID'),
+  'popularBorder'     : 10
 };
 
 // Slack関連の各種設定値
@@ -234,18 +236,50 @@ function addQiitaTagToFollow(tagId){
  * @param string targetGroup データ所有元の所属するグループ
  * @param string targetId    データ所有元のID
  * @param string targetType  取得対象のデータ種別
+ * @param int    perPage     各リクエストごとの最大取得データ数
+ * @param int    maxPage     リクエストの最大発行回数
  *
  * @return array 取得結果(連想配列)の配列
  */
-function execQiitaApiForGet(targetGroup, targetId, targetType){
+function execQiitaApiForGet(targetGroup, targetId, targetType, perPage, maxPage){
+  // パラメータを初期化
+  perPage = perPage || qiita['apiRequestPerPage'];
+  maxPage = maxPage || qiita['apiRequestMaxPage'];
+
   // リクエスト対象のURL
   var url = [qiita['apiUrl'], targetGroup, targetId, targetType].join('/');
 
-  // リクエストを発行し、結果をJSONで取得
-  var response = UrlFetchApp.fetch(url);
+  // リクエスト設定
+  var options = {
+    'method' : 'get',
+    'headers': {'Authorization': 'Bearer ' + qiita['apiToken']}
+  };
 
-  // レスポンス結果をパースし、呼び出し元に返す
-  return JSON.parse(response.getContentText());
+  // リクエストを発行し、該当の要素数を取得
+  var totalCount = UrlFetchApp.fetch(url, options).getHeaders()['total-count'];
+
+  //　該当の要素数からページ数を取得
+  var pageCount = Math.ceil(totalCount / perPage);
+
+  // 取得対象となるページ数の最大値を取得
+  maxPage = Math.min(maxPage, pageCount);
+
+  // 取得対象の各ページを対象にリクエストを発行
+  var result = [];
+  for(var targetPage = 1; targetPage <= maxPage; targetPage++){
+    // リクエスト対象のURL
+    var targetPageUrl = url + '?' + 'per_page=' + perPage + '&' + 'page=' + targetPage;
+
+    // リクエスト発行
+    var response = UrlFetchApp.fetch(targetPageUrl, options);
+    var responseJson = JSON.parse(response.getContentText());
+
+    // 返却用の配列にレスポンスを追加
+    Array.prototype.push.apply(result, responseJson);
+  }
+
+  // レスポンス結果を呼び出し元に返す
+  return result;
 }
 
 /**
